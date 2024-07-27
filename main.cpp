@@ -83,9 +83,9 @@ Vec3f barycentric(const Vec3i (&pts)[3], const Vec3i &P) {
 }
 
 void triangle(Vec3i (&pts)[3], float *z_buffer, TGAImage &image, const TGAColor &color) {
-    Vec2i bboxmin(image.width() - 1, image.height() - 1);
+    Vec2i bboxmin(image.get_width() - 1, image.get_height() - 1);
     Vec2i bboxmax(0, 0);
-    Vec2i clamp(image.width() - 1, image.height() - 1);
+    Vec2i clamp(image.get_width() - 1, image.get_height() - 1);
 
     for (int i = 0; i < 3; ++i) {
         bboxmin.x = std::max(0, std::min(bboxmin.x, pts[i].x));
