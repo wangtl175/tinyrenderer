@@ -82,7 +82,10 @@ Vec3f barycentric(const Vec3i (&pts)[3], const Vec3i &P) {
     return {1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z};
 }
 
-void triangle(Vec3i (&pts)[3], float *z_buffer, TGAImage &image, const TGAColor &color) {
+void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], float intensity, Model *model, float *z_buffer,
+              TGAImage &image) {
+    if ((pts[0].y == pts[1].y && pts[0].y == pts[2].y) || (pts[0].x == pts[1].x && pts[0].x == pts[2].x)) return;
+
     Vec2i bboxmin(image.get_width() - 1, image.get_height() - 1);
     Vec2i bboxmax(0, 0);
     Vec2i clamp(image.get_width() - 1, image.get_height() - 1);
@@ -105,7 +108,15 @@ void triangle(Vec3i (&pts)[3], float *z_buffer, TGAImage &image, const TGAColor 
             int idx = P.x + P.y * WIDTH;
             if (z_buffer[idx] < Pz) {
                 z_buffer[idx] = Pz;
-                image.set(P.x, P.y, color);
+
+                /*
+                 * pts和uv是线性转换关系
+                 * 点P在pts三角形的重心坐标和点Puv在uv三角形里的坐标一致
+                 */
+                Vec2i Puv = uv[0] * bc_screen.x + uv[1] * bc_screen.y + uv[2] * bc_screen.z;
+                TGAColor color = model->diffuse(Puv);
+
+                image.set(P.x, P.y, TGAColor(color.r * intensity, color.g * intensity, color.b * intensity));
             }
         }
     }
@@ -142,13 +153,18 @@ int main(int argc, char **argv) {
         float intensity = n * light_dir;
 
         if (intensity > 0) {
-            triangle(screen_coords, z_buffer, image,
-                     {uint8_t(intensity * 255), uint8_t(intensity * 255), uint8_t(intensity * 255), 255});
+            Vec2i uv[3];
+            for (int j = 0; j < 3; ++j) {
+                uv[j] = model->uv(i, j);
+            }
+
+            triangle(screen_coords, uv, intensity, model, z_buffer, image);
         }
     }
 
     delete[] z_buffer;
     delete model;
+    image.flip_vertically();
     image.write_tga_file("output.tga");
 
     return 0;
