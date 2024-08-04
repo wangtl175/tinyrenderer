@@ -10,7 +10,7 @@ An implement of https://github.com/ssloy/tinyrenderer
 
 为什么会近大远小呢？如下图zy坐标系上，A和B的y坐标一样，但是在2c处形成的投影则是A''处于更高的地方
 
-![img.png](img7.png)
+![img.png](imags/img8.png)
 
 ## 二维几何
 ### Linear transformation 线性转换

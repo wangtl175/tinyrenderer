@@ -116,7 +116,7 @@ void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], float intensity, Mode
                 Vec2i Puv = uv[0] * bc_screen.x + uv[1] * bc_screen.y + uv[2] * bc_screen.z;
                 TGAColor color = model->diffuse(Puv);
 
-                image.set(P.x, P.y, TGAColor(color.r * intensity, color.g * intensity, color.b * intensity));
+                image.set(P.x, P.y, color * intensity);
             }
         }
     }
@@ -135,7 +135,12 @@ int main(int argc, char **argv) {
         z_buffer[i] = -std::numeric_limits<float>::max();
     }
 
+    int camera_z = 5;
+
     Model *model = new Model(argv[1]);
+
+    Matrix projection = Matrix::identity(4);
+    projection[3][2] = -1.f / camera_z;
 
     for (int i = 0; i < model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
@@ -145,8 +150,10 @@ int main(int argc, char **argv) {
         for (int j = 0; j < 3; ++j) {
             world_coords[j] = model->vert(face[j]);
 
-            screen_coords[j].x = (1 + world_coords[j].x) * WIDTH / 2;
-            screen_coords[j].y = (1 + world_coords[j].y) * HEIGHT / 2;
+            Vec3f v = projection * Matrix(world_coords[j]);
+
+            screen_coords[j].x = (1 +v.x) * WIDTH / 2;
+            screen_coords[j].y = (1 + v.y) * HEIGHT / 2;
         }
         Vec3f n = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
         n.normalize();
