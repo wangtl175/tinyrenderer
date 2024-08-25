@@ -1,6 +1,12 @@
 # tinyrenderer
 An implement of https://github.com/ssloy/tinyrenderer
 
+# Lession 1
+
+[obj文件](https://en.wikipedia.org/wiki/Wavefront_.obj_file)
+
+[中文](https://blog.csdn.net/shebao3333/article/details/132094257)
+
 # Lession 4: Perspective Projection
 > 投影就是把三维的场景变成观测到的二维图像，分为正交投影和透视投影
 > 
