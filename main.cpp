@@ -72,8 +72,6 @@ bool is_in_triangle(const Vec2i (&pts)[3], const Vec2i &P) {
     return true;
 }
 
-// todo wtl: 这里可能有点小失误，导致z坐标计算不是很准确?
-// pts和P都是整数，会有问题吗? -> 应该不会
 Vec3f barycentric(const Vec3i (&pts)[3], const Vec3i &P) {
     Vec3f u = Vec3f(pts[2].x - pts[0].x, pts[1].x - pts[0].x, pts[0].x - P.x) ^
               Vec3f(pts[2].y - pts[0].y, pts[1].y - pts[0].y, pts[0].y - P.y);
@@ -85,7 +83,7 @@ Vec3f barycentric(const Vec3i (&pts)[3], const Vec3i &P) {
 }
 
 void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], const float (&intensity)[3], Model *model, float *z_buffer,
-              TGAImage &image, float tmpIntensity = 0 ) {
+              TGAImage &image) {
     if ((pts[0].y == pts[1].y && pts[0].y == pts[2].y) || (pts[0].x == pts[1].x && pts[0].x == pts[2].x)) return;
 
     Vec2i bboxmin(image.get_width() - 1, image.get_height() - 1);
@@ -108,21 +106,8 @@ void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], const float (&intensi
 
             float Pz = pts[0].z * bc_screen.x + pts[1].z * bc_screen.y + pts[2].z * bc_screen.z;
 
-
-            /*
-             * 现在的问题是，有的面的tmpIntensity小于0，该如何处理？Backface Culling
-             * 面的法向量如何确定，两个不同方向的法向量如何确定？
-             *
-             * 现在是需要额外利用tmpIntensity做Backface Culling才能正确渲染
-             * 否则有一些背后的面被渲染出来
-             * 为什么z-buffer不能排除掉这些面？
-             */
-
-            // todo wtl: P点的intensity使用pts三个点的intensity乘上重心坐标计算
-            // todo wtl: intensity有时候小于0
             int idx = P.x + P.y * WIDTH;
-//            if (z_buffer[idx] < Pz) {
-            if (z_buffer[idx] < Pz && tmpIntensity > 0) {
+            if (z_buffer[idx] < Pz) {
                 z_buffer[idx] = Pz;
 
                 /*
@@ -132,6 +117,8 @@ void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], const float (&intensi
                 Vec2i Puv = uv[0] * bc_screen.x + uv[1] * bc_screen.y + uv[2] * bc_screen.z;
                 float P_intensity = intensity[0] * bc_screen.x + intensity[1] * bc_screen.y +
                                     intensity[2] * bc_screen.z;
+
+                if (P_intensity < 0) continue;
 
                 TGAColor color = model->diffuse(Puv);
 
@@ -176,30 +163,13 @@ int main(int argc, char **argv) {
 
             screen_coords[j].x = (1 +v.x) * WIDTH / 2;
             screen_coords[j].y = (1 + v.y) * HEIGHT / 2;
+            screen_coords[j].z = (1 + v.z) * 100 / 2; // todo wtl: triangle函数的Vec3i改为float类型
 
             // model->norm(i, j)获取顶点的法向量
-            intensity[j] = std::abs(model->norm(i, j) * light_dir);  // todo wtl: 这里还需要取绝对值？
-//            intensity[j] = model->norm(i, j) * light_dir;
+            intensity[j] = model->norm(i, j) * light_dir;
             uv[j] = model->uv(i, j);
         }
-
-        Vec3f n0 = (world_coords[2] - world_coords[0]) ^ (world_coords[1] - world_coords[0]);
-//        Vec3f n1 = (world_coords[0] - world_coords[1]) ^ (world_coords[2] - world_coords[1]);
-//        Vec3f n2 = (world_coords[1] - world_coords[2]) ^ (world_coords[0] - world_coords[2]);
-//
-        n0.normalize();
-//        n1.normalize();
-//        n2.normalize();
-//
-//        Vec3f mn0 = model->norm(i, 0);
-//        Vec3f mn1 = model->norm(i, 1);
-//        Vec3f mn2 = model->norm(i, 2);
-//
-//        std::cout << n0 << n1 << n2 << mn0 << mn1 << mn2 << std::endl;
-
-        float t = n0 * light_dir;
-
-        triangle(screen_coords, uv, intensity, model, z_buffer, image, t);
+        triangle(screen_coords, uv, intensity, model, z_buffer, image);
     }
 
     delete[] z_buffer;
