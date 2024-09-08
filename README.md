@@ -1,5 +1,8 @@
 # tinyrenderer
+
 An implement of https://github.com/ssloy/tinyrenderer
+
+中文参考 https://supercodepower.com/docs/toy-renderer/index
 
 # Lession 1
 
@@ -7,9 +10,50 @@ An implement of https://github.com/ssloy/tinyrenderer
 
 [中文](https://blog.csdn.net/shebao3333/article/details/132094257)
 
+# Lession 2
+
+## 重心坐标
+
+$\triangle ABC$所在平面的点$P$，有
+
+$$
+\vec{AP} = u \vec{AB} + v \vec{AC} \\
+P - A = u (B - A) + v (A -C)  \\
+P =  (1-u-v)A + u B +vC
+$$
+
+称$(1-u-v, u, v)$是$P$关于$A, B,C$的重心坐标。如何求解$u,v$
+
+$$
+\vec{AP} = u \vec{AB} + v \vec{AC} \\
+u\vec{AB} + v \vec{AC} + \vec{PA} = 0
+$$
+
+也就是说
+
+$$
+u\vec{AB}_x + v \vec{AC}_x + \vec{PA}_x = 0 \\
+u\vec{AB}_y + v \vec{AC}_y + \vec{PA}_y = 0
+$$
+
+因此，$(u,v,1)$同时垂直于向量$(\vec{AB}_x,\vec{AC}_x,\vec{PA}_x)$和$(\vec{AB}_y,\vec{AC}_y,\vec{PA}_y)$，假设这两个向量的叉乘为$(e,f,g)$，且$g \neq0$，则$u=\frac{e}{g}, v=\frac{f}{g}$；如果$g=0$，$\triangle ABC$退化成一条直线了。
+
+## Back-face culling
+
+用于剔除那些处于后背的面，减少需要渲染的面。
+
+### 向量叉乘的方向
+
+$\vec{a} \times \vec{b}$的方向可以右手法则判断，四指先指向$\vec{a}$的方向，然后向$\vec{b}$弯曲，拇指即为$\vec{a} \times \vec{b}$的方向。
+
+一个平面的法向量可以通过平面内两个非线性相关的向量的叉乘求出来。平面的法向量有无数个，单位法向量只有2个，分别指向两个不同的方向。
+
+在obj文件里，三个点$V_0$、$V_1$、$V_2$确定一个平面，取$\vec{V_2V_0} \times \vec{V_1V_0}$的方向为法向量的方向。如果单位法向量与光源向量的点乘小于0，说明这个面是背光的，无需渲染，这就是back-face culling。
+
 # Lession 4: Perspective Projection
+
 > 投影就是把三维的场景变成观测到的二维图像，分为正交投影和透视投影
-> 
+>
 > 透视投影和人眼观测到的成像差不多，有近大远小的效果；正交投影则没有近大远小的变化
 
 ![img.png](imags/img7.png)
@@ -19,7 +63,9 @@ An implement of https://github.com/ssloy/tinyrenderer
 ![img.png](imags/img8.png)
 
 ## 二维几何
+
 ### Linear transformation 线性转换
+
 对点(x, y)进行线性转换可以写成以下形式
 
 ![img.png](imags/img.png)
@@ -35,6 +81,7 @@ An implement of https://github.com/ssloy/tinyrenderer
 ![img.png](imags/img2.png)
 
 ## Homogeneous coordinates 齐次坐标系
+
 齐次坐标是将一个原本n维的向量用一个n+1维的向量来表示
 
 使用齐次坐标系，可以将仿射转换用一个矩阵表示
@@ -44,6 +91,7 @@ An implement of https://github.com/ssloy/tinyrenderer
 矩阵的最后一行，和透视投影中的视角(camera)有关
 
 ## 三维几何
+
 假设camera在(0,0,c)上， 计算一个点(x,y,z)的投影
 
 ![img.png](imags/img3.png)
@@ -51,6 +99,7 @@ An implement of https://github.com/ssloy/tinyrenderer
 计算出来的点，可以用于渲染，用上z-buffer使用计算出来的z。之前渲染出来的画像，相当于c趋于无穷大的时候。
 
 # Lesson 5
+
 > https://blog.csdn.net/qq_36653924/article/details/130976716
 
 ## Change of basis in 3D space
@@ -109,4 +158,3 @@ print(M.T)
 ## Transformation of normal vector
 
 如果有一个模型以及它的法向量，并且这个模型用一个矩阵进行仿射(affine mapping)转换，那么法向量就是用这个矩阵的逆进行转换
-
