@@ -72,6 +72,7 @@ bool is_in_triangle(const Vec2i (&pts)[3], const Vec2i &P) {
     return true;
 }
 
+// todo wtl: 参数改成浮点类型
 Vec3f barycentric(const Vec3i (&pts)[3], const Vec3i &P) {
     Vec3f u = Vec3f(pts[2].x - pts[0].x, pts[1].x - pts[0].x, pts[0].x - P.x) ^
               Vec3f(pts[2].y - pts[0].y, pts[1].y - pts[0].y, pts[0].y - P.y);
@@ -163,10 +164,11 @@ int main(int argc, char **argv) {
 
             screen_coords[j].x = (1 +v.x) * WIDTH / 2;
             screen_coords[j].y = (1 + v.y) * HEIGHT / 2;
-            screen_coords[j].z = (1 + v.z) * 100 / 2; // todo wtl: triangle函数的Vec3i改为float类型
+            screen_coords[j].z = (1 + v.z) * 800 / 2; // todo wtl: triangle函数的Vec3i改为float类型
 
             // model->norm(i, j)获取顶点的法向量
-            intensity[j] = model->norm(i, j) * light_dir;
+            intensity[j] = std::abs(model->norm(i, j) * light_dir);  // todo wtl: 这里要取绝对值才能正常渲染，需要想一下为什么
+//            intensity[j] = model->norm(i, j) * light_dir;
             uv[j] = model->uv(i, j);
         }
         triangle(screen_coords, uv, intensity, model, z_buffer, image);
