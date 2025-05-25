@@ -100,7 +100,7 @@ $\vec{a} \times \vec{b}$的方向可以右手法则判断，四指先指向$\vec
 
 # Lesson 5
 
-> https://blog.csdn.net/qq_36653924/article/details/130976716
+> Gouraud Shading https://blog.csdn.net/qq_36653924/article/details/130976716
 
 ## Change of basis in 3D space
 

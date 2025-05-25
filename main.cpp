@@ -129,6 +129,48 @@ void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], const float (&intensi
     }
 }
 
+void print_model(Model *model) {
+    for (int i = 0; i < model->nfaces(); ++i) {
+        std::vector<int> face = model->face(i);
+
+        // 第i个face的3个点
+        Vec3f coords[3];
+        for (int j = 0; j < 3; ++j) {
+            coords[j] = model->vert(face[j]);
+        }
+
+        // 第i个face的法向量
+        Vec3f n = (coords[2] - coords[0]) ^ (coords[1] - coords[0]);
+        n.normalize();
+
+        Vec3f n0 = model->norm(i, 0);
+        Vec3f n1 = model->norm(i, 1);
+        Vec3f n2 = model->norm(i, 2);
+
+        std::cout << "------------" << std::endl;
+        std::cout << n << std::endl;
+        std::cout << n0 << std::endl;
+        std::cout << n1 << std::endl;
+        std::cout << n2 << std::endl;
+
+        std::cout << n * (coords[2] - coords[0]) << std::endl;
+        std::cout << n0 * (coords[2] - coords[0]) << std::endl;
+
+        /* TODO(wtl): 输出完全不一样
+         * 要确定两个的区别，了解obj文件
+         * 确实不一样，因为norm是这个点在原本的模型的面对应的法向量，而n是三角形平面在这个点的法向量
+         * 两个差不多在同一条直线的不同方向上 (和coords[2] - coords[0]的点乘几乎等于0)
+         * ------------
+         (-0.663736, -0.418848, -0.619695)
+         (0.833236, 0.45913, 0.308087)
+         (0.241053, 0.911201, 0.334074)
+         (0.854218, -0.043011, 0.518132)
+         3.72529e-09
+         0.0207472
+         * */
+    }
+}
+
 int main(int argc, char **argv) {
     if (argc != 2) {
         std::cerr << "param error: require an obj file" << std::endl;
@@ -149,6 +191,8 @@ int main(int argc, char **argv) {
     Matrix projection = Matrix::identity(4);
     projection[3][2] = -1.f / camera_z;
 
+    print_model(model);
+
     for (int i = 0; i < model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
 
@@ -168,7 +212,7 @@ int main(int argc, char **argv) {
 
             // model->norm(i, j)获取顶点的法向量
             intensity[j] = std::abs(model->norm(i, j) * light_dir);  // todo wtl: 这里要取绝对值才能正常渲染，需要想一下为什么
-//            intensity[j] = model->norm(i, j) * light_dir;
+//            intensity[j] = -(model->norm(i, j) * light_dir);  // todo wtl: 这样也可以，可能是方向搞反了。不取绝对值，相当于做了back-face culling
             uv[j] = model->uv(i, j);
         }
         triangle(screen_coords, uv, intensity, model, z_buffer, image);
