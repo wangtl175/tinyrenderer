@@ -5,14 +5,14 @@
 #include "model.h"
 #include <iostream>
 
-const static TGAColor WHITE{255, 255, 255, 255};
-const static TGAColor BLUE{255, 0, 0, 255};
-const static TGAColor RED{0, 0, 255, 255};
-const static TGAColor GREEN{0, 255, 0, 255};
+const static TGAColor WHITE{ 255, 255, 255, 255 };
+const static TGAColor BLUE{ 255, 0, 0, 255 };
+const static TGAColor RED{ 0, 0, 255, 255 };
+const static TGAColor GREEN{ 0, 255, 0, 255 };
 const static int WIDTH = 800;
 const static int HEIGHT = 800;
 
-void line(int x0, int y0, int x1, int y1, TGAImage &image, const TGAColor &color) {
+void line(int x0, int y0, int x1, int y1, TGAImage& image, const TGAColor& color) {
     bool steep = false;
     if (std::abs(x1 - x0) < std::abs(y1 - y0)) {
         std::swap(x0, y0);
@@ -33,7 +33,8 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, const TGAColor &color
     for (int x = x0, y = y0; x <= x1; ++x) {
         if (steep) {
             image.set(y, x, color);
-        } else {
+        }
+        else {
             image.set(x, y, color);
         }
         error += derror;
@@ -53,10 +54,10 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, const TGAColor &color
  * calc i, j:
  * https://blog.csdn.net/wangjiangrong/article/details/115326930
  */
-bool is_in_triangle(const Vec2i (&pts)[3], const Vec2i &P) {
-    const Vec2i &A = pts[0];
-    const Vec2i &B = pts[1];
-    const Vec2i &C = pts[2];
+bool is_in_triangle(const Vec2i(&pts)[3], const Vec2i& P) {
+    const Vec2i& A = pts[0];
+    const Vec2i& B = pts[1];
+    const Vec2i& C = pts[2];
 
     int i_up = -(P.x - B.x) * (C.y - B.y) + (P.y - B.y) * (C.x - B.x);
     int i_down = -(A.x - B.x) * (C.y - B.y) + (A.y - B.y) * (C.x - B.x);
@@ -73,18 +74,18 @@ bool is_in_triangle(const Vec2i (&pts)[3], const Vec2i &P) {
 }
 
 // todo wtl: 参数改成浮点类型
-Vec3f barycentric(const Vec3i (&pts)[3], const Vec3i &P) {
+Vec3f barycentric(const Vec3i(&pts)[3], const Vec3i& P) {
     Vec3f u = Vec3f(pts[2].x - pts[0].x, pts[1].x - pts[0].x, pts[0].x - P.x) ^
-              Vec3f(pts[2].y - pts[0].y, pts[1].y - pts[0].y, pts[0].y - P.y);
+        Vec3f(pts[2].y - pts[0].y, pts[1].y - pts[0].y, pts[0].y - P.y);
     /* `pts` and `P` has integer value as coordinates, that is, u has integer value as coordinates
        so `abs(u[2])` < 1 means `u[2]` is 0, that means
        triangle is degenerate, in this case return something with negative coordinates */
-    if (std::abs(u.z) < 1) return {-1, 1, 1};
-    return {1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z};
+    if (std::abs(u.z) < 1) return { -1, 1, 1 };
+    return { 1.f - (u.x + u.y) / u.z, u.y / u.z, u.x / u.z };
 }
 
-void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], const float (&intensity)[3], Model *model, float *z_buffer,
-              TGAImage &image) {
+void triangle(const Vec3i(&pts)[3], const Vec2i(&uv)[3], const float(&intensity)[3], Model* model, float* z_buffer,
+    TGAImage& image) {
     if ((pts[0].y == pts[1].y && pts[0].y == pts[2].y) || (pts[0].x == pts[1].x && pts[0].x == pts[2].x)) return;
 
     Vec2i bboxmin(image.get_width() - 1, image.get_height() - 1);
@@ -117,7 +118,7 @@ void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], const float (&intensi
                  */
                 Vec2i Puv = uv[0] * bc_screen.x + uv[1] * bc_screen.y + uv[2] * bc_screen.z;
                 float P_intensity = intensity[0] * bc_screen.x + intensity[1] * bc_screen.y +
-                                    intensity[2] * bc_screen.z;
+                    intensity[2] * bc_screen.z;
 
                 if (P_intensity < 0) continue;
 
@@ -129,7 +130,7 @@ void triangle(const Vec3i (&pts)[3], const Vec2i (&uv)[3], const float (&intensi
     }
 }
 
-void print_model(Model *model) {
+void print_model(Model* model) {
     for (int i = 0; i < model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
 
@@ -171,7 +172,7 @@ void print_model(Model *model) {
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     if (argc != 2) {
         std::cerr << "param error: require an obj file" << std::endl;
         return -1;
@@ -179,19 +180,19 @@ int main(int argc, char **argv) {
 
     TGAImage image(WIDTH, HEIGHT, TGAImage::RGB);
     Vec3f light_dir(0, 0, -1);
-    float *z_buffer = new float[WIDTH * HEIGHT];
+    float* z_buffer = new float[WIDTH * HEIGHT];
     for (int i = 0; i < WIDTH * HEIGHT; ++i) {
         z_buffer[i] = -std::numeric_limits<float>::max();
     }
 
     int camera_z = 5;
 
-    Model *model = new Model(argv[1]);
+    Model* model = new Model(argv[1]);
 
     Matrix projection = Matrix::identity(4);
     projection[3][2] = -1.f / camera_z;
 
-    print_model(model);
+    // print_model(model);
 
     for (int i = 0; i < model->nfaces(); ++i) {
         std::vector<int> face = model->face(i);
@@ -206,13 +207,13 @@ int main(int argc, char **argv) {
 
             Vec3f v = projection * Matrix(world_coords[j]);
 
-            screen_coords[j].x = (1 +v.x) * WIDTH / 2;
+            screen_coords[j].x = (1 + v.x) * WIDTH / 2;
             screen_coords[j].y = (1 + v.y) * HEIGHT / 2;
             screen_coords[j].z = (1 + v.z) * 800 / 2; // todo wtl: triangle函数的Vec3i改为float类型
 
             // model->norm(i, j)获取顶点的法向量
             intensity[j] = std::abs(model->norm(i, j) * light_dir);  // todo wtl: 这里要取绝对值才能正常渲染，需要想一下为什么
-//            intensity[j] = -(model->norm(i, j) * light_dir);  // todo wtl: 这样也可以，可能是方向搞反了。不取绝对值，相当于做了back-face culling
+            //            intensity[j] = -(model->norm(i, j) * light_dir);  // todo wtl: 这样也可以，可能是方向搞反了。不取绝对值，相当于做了back-face culling
             uv[j] = model->uv(i, j);
         }
         triangle(screen_coords, uv, intensity, model, z_buffer, image);
